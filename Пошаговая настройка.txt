@@ -1,0 +1,61 @@
+VIRTUALBOX и VAGRANT
+#Качаем -> ставим Virtualbox и Vagrant
+https://www.virtualbox.org/wiki/Downloads
+https://developer.hashicorp.com/vagrant/install?product_intent=vagrant
+
+#Создадим Vagrantfile, в котором будут указаны параметры нашей ВМ:
+vagrant init
+vi vagrant
+  # Описываем Виртуальные машины
+  MACHINES = {
+  # Указываем имя ВМ "kernel update"
+    :"kernel-update" => {
+                #Какой vm box будем использовать
+                :box_name => "generic/centos8s",
+                #Указываем box_version
+                :box_version => "4.3.4",
+                #Указываем количество ядер ВМ
+                :cpus => 2,
+                #Указываем количество ОЗУ в мегабайтах
+                :memory => 1024,
+              }
+  }
+
+  Vagrant.configure("2") do |config|
+    MACHINES.each do |boxname, boxconfig|
+      # Отключаем проброс общей папки в ВМ
+      config.vm.synced_folder ".", "/vagrant", disabled: true
+      # Применяем конфигурацию ВМ
+      config.vm.define boxname do |box|
+        box.vm.box = boxconfig[:box_name]
+        box.vm.box_version = boxconfig[:box_version]
+        box.vm.host_name = boxname.to_s
+        box.vm.provider "virtualbox" do |v|
+          v.memory = boxconfig[:memory]
+          v.cpus = boxconfig[:cpus]
+        end
+      end
+    end
+  end
+
+#Скачиваем box 
+https://app.vagrantup.com/ubuntu/boxes/xenial64
+#Добавляем box в vagrant
+vagrant box add "ubuntu/23" xenial-server-cloudimg-amd64-vagrant.box 
+#Запускаем виртуалку
+vagrant up
+#Подключаемся к машине
+vagrant ssh
+
+ОБНОВЛЯЕМ ЯДРО 
+#Качаем нужную версию ядра
+https://kernel.ubuntu.com/~kernel-ppa/mainline/
+#На открывшейся странице будут ссылки на .deb файлы. Нам нужно скачать 4 из них:
+    linux-headers-{version}-generic_{version}.{date}_amd64.deb
+    linux-headers-{version}_{version}.{date}_all.deb
+    linux-image-unsigned-{version}-generic_{version}.{date}_amd64.deb
+    linux-modules-{version}-generic_{version}.{date}_amd64.deb
+#Устанвливаем файлы
+sudo apt install -y ~/linux-*.deb
+Перезагружаем машину
+
